@@ -6,9 +6,31 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rogeriobispo/graphql-go/graph/model"
 )
+
+// Courses is the resolver for the courses field.
+func (r *categoryResolver) Courses(ctx context.Context, obj *model.Category) ([]*model.Course, error) {
+	course, err := r.CourseDB.FindByCategoryID(obj.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var courseModel []*model.Course
+	for _, course := range course {
+		courseModel = append(courseModel, &model.Course{
+			ID: course.ID,
+			Name: course.Name,
+			Description: &course.Description,
+		})
+
+		return courseModel, nil
+	}
+
+}
 
 // Createcategory is the resolver for the createcategory field.
 func (r *mutationResolver) Createcategory(ctx context.Context, input model.NewCategory) (*model.Category, error) {
@@ -78,11 +100,15 @@ func (r *queryResolver) Course(ctx context.Context) ([]*model.Course, error) {
 	return coursesModel, nil
 }
 
+// Category returns CategoryResolver implementation.
+func (r *Resolver) Category() CategoryResolver { return &categoryResolver{r} }
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+type categoryResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
